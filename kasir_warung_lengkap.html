@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<title>Kasir Warung</title>
+<style>
+:root{--blue:#2563eb;--dark:#172033;--muted:#64748b;--bg:#f1f5f9;--line:#e2e8f0;--red:#dc2626;--green:#15803d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--dark);font:15px Arial,sans-serif}
+button,input,select{font:inherit}button{border:0;border-radius:10px;padding:12px 14px;font-weight:700;cursor:pointer}button:disabled{opacity:.45}
+.primary{background:var(--blue);color:#fff}.secondary{background:#e2e8f0;color:var(--dark)}.danger{background:#fee2e2;color:#991b1b}.success{background:#dcfce7;color:#166534}
+.wrap{max-width:650px;min-height:100vh;margin:auto;background:#fff;padding-bottom:90px}.hidden{display:none!important}
+header{background:var(--blue);color:#fff;padding:20px 18px;border-radius:0 0 20px 20px}header h1{font-size:21px;margin:0 0 6px}header p{margin:0;font-size:13px}
+main{padding:14px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:13px;box-shadow:0 3px 12px #00000008}
+h2{font-size:19px;margin:0 0 12px}h3{font-size:16px;margin:0 0 10px}.muted{color:var(--muted);font-size:13px}
+label{display:block;font-size:13px;font-weight:700;margin:12px 0 6px}
+input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:var(--dark);min-height:44px}
+.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}.grid2,.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{padding:13px;border-radius:12px;background:#eff6ff}.stat span{font-size:12px;color:var(--muted)}.stat strong{display:block;color:var(--blue);font-size:18px;margin-top:7px;overflow-wrap:anywhere}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:650px;display:flex;justify-content:space-around;background:#fff;border-top:1px solid var(--line);padding:7px 3px calc(7px + env(safe-area-inset-bottom));z-index:10}
+.nav button{background:transparent;color:var(--muted);font-size:11px;padding:8px 3px;flex:1}.nav button.active{color:var(--blue);background:#eff6ff}
+.page{display:none}.page.active{display:block}
+.product{display:flex;gap:11px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.product:last-child{border-bottom:0}
+.thumb{width:70px;height:70px;object-fit:cover;border-radius:10px;background:#eff6ff;flex-shrink:0}.product-info{flex:1;min-width:0}.product-info b{display:block;overflow-wrap:anywhere}.product-info small{display:block;color:var(--muted);margin-top:4px}.actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.actions button{padding:8px 10px;font-size:12px}
+.itemline{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}.itemline:last-child{border:0}
+.total{font-size:20px;font-weight:800;color:var(--blue)}.full{width:100%;margin-top:10px}
+.login{padding:30px 20px}.login h1{color:var(--blue);margin:0 0 8px;font-size:29px}
+.note{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:11px;font-size:12px;color:#92400e;line-height:1.5}
+.empty{text-align:center;padding:22px 8px;color:var(--muted);font-size:13px}.admin-only.hidden{display:none!important}
+@media(min-width:520px){body{padding:16px 0}.wrap{border-radius:18px;overflow:hidden;box-shadow:0 8px 35px #00000012}.nav{bottom:16px;border-radius:0 0 18px 18px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section id="loginScreen" class="login">
+<h1>🛒 Kasir Warung</h1><p class="muted">Masuk untuk mulai mengelola toko.</p>
+<label>Username</label><input id="loginUser" autocomplete="username" placeholder="Username" value="">
+<label>Password</label><input id="loginPass" type="password" autocomplete="current-password" placeholder="Password">
+<label>Masuk sebagai</label><select id="loginRole"><option value="admin">Admin</option><option value="kasir">Kasir</option></select>
+<button class="primary full" onclick="login()">MASUK</button>
+<p class="muted">Akun demo: admin / 1234 atau kasir / 1234</p>
+<div class="note">Data disimpan di browser perangkat ini. Ini versi demo lokal, belum memiliki sinkronisasi antarperangkat atau keamanan server.</div>
+</section>
+
+<section id="appScreen" class="hidden">
+<header><h1 id="storeTitle">Kasir Warung</h1><p id="welcome">Selamat datang</p></header>
+<main>
+<section id="homePage" class="page active">
+<div class="card"><h2>Dashboard</h2><p class="muted">Ringkasan penjualan hari ini</p><div class="stats" style="margin-top:14px">
+<div class="stat"><span>Penjualan hari ini</span><strong id="statSales">Rp0</strong></div><div class="stat"><span>Transaksi hari ini</span><strong id="statTransactions">0</strong></div>
+<div class="stat"><span>Jumlah produk</span><strong id="statProducts">0</strong></div><div class="stat"><span>Stok menipis</span><strong id="statLow">0</strong></div></div></div>
+<div class="card"><h3>Menu cepat</h3><div class="grid2"><button class="primary" onclick="go('kasirPage')">🛒 Buka Kasir</button><button class="secondary admin-only" onclick="go('produkPage')">📦 Tambah Barang</button></div></div>
+</section>
+
+<section id="produkPage" class="page">
+<div class="card"><h2>📦 Manajemen Barang</h2><button class="primary full" onclick="openProductForm()">＋ Tambah Barang</button></div>
+<div class="card hidden" id="productFormCard"><h2 id="productFormTitle">Tambah Barang</h2>
+<form id="productForm">
+<label>Foto barang (opsional)</label><input id="pPhoto" type="file" accept="image/*" capture="environment">
+<img id="photoPreview" class="thumb hidden" style="width:100%;height:180px;margin-top:8px" alt="Pratinjau foto">
+<label>Nama barang *</label><input id="pName" required maxlength="100" placeholder="Contoh: Kopi Hitam">
+<div class="row"><div><label>Kode barang *</label><input id="pCode" required maxlength="40" placeholder="BRG001"></div><div><label>Kategori *</label><select id="pCategory" required><option value="">Pilih</option><option>Makanan</option><option>Minuman</option><option>Sembako</option><option>Kebutuhan Rumah</option><option>Lainnya</option></select></div></div>
+<label>Satuan</label><select id="pUnit"><option>pcs</option><option>bungkus</option><option>botol</option><option>dus</option><option>kg</option><option>gram</option><option>liter</option><option>paket</option></select>
+<div class="row"><div><label>Harga modal (Rp) *</label><input id="pCost" type="number" min="0" step="1" required></div><div><label>Harga jual (Rp) *</label><input id="pPrice" type="number" min="0" step="1" required></div></div>
+<div class="row"><div><label>Stok *</label><input id="pStock" type="number" min="0" step="1" required></div><div><label>Batas stok menipis</label><input id="pMin" type="number" min="0" step="1" value="5" required></div></div>
+<button class="primary full" type="submit">💾 Simpan Barang</button><button class="secondary full" type="button" onclick="closeProductForm()">Batal</button>
+</form></div>
+<div class="card"><h3>Daftar Barang</h3><input id="productSearch" type="search" placeholder="🔍 Cari nama atau kode..." oninput="renderProducts()"><div id="productList"></div></div>
+</section>
+
+<section id="kasirPage" class="page">
+<div class="card"><h2>🛒 Kasir</h2><input id="saleSearch" type="search" placeholder="🔍 Cari barang..." oninput="renderSaleProducts()"><div id="saleProducts"></div></div>
+<div class="card"><h3>Keranjang</h3><div id="cartList" class="empty">Belum ada barang di keranjang.</div><div class="itemline"><b>Total</b><span class="total" id="cartTotal">Rp0</span></div>
+<label>Metode pembayaran</label><select id="paymentMethod"><option>Tunai</option><option>QRIS (dicatat manual)</option><option>Transfer (dicatat manual)</option></select>
+<label>Uang dibayar (Rp)</label><input id="paidAmount" type="number" min="0" placeholder="Masukkan uang pelanggan" oninput="updateChange()">
+<div class="itemline"><b>Kembalian</b><strong id="changeAmount">Rp0</strong></div>
+<button class="primary full" onclick="checkout()">Selesaikan Transaksi</button><button class="secondary full" onclick="clearCart()">Kosongkan Keranjang</button>
+</div></section>
+
+<section id="laporanPage" class="page">
+<div class="card"><h2>📊 Riwayat Transaksi</h2><div class="stats"><div class="stat"><span>Total penjualan</span><strong id="reportSales">Rp0</strong></div><div class="stat"><span>Perkiraan laba kotor</span><strong id="reportProfit">Rp0</strong></div></div><div id="transactionList" style="margin-top:14px"></div></div>
+<div class="card admin-only"><h3>Catat Pengeluaran</h3><label>Keterangan</label><input id="expenseName" placeholder="Contoh: Belanja stok"><label>Jumlah (Rp)</label><input id="expenseAmount" type="number" min="1" placeholder="50000"><button class="primary full" onclick="addExpense()">Simpan Pengeluaran</button><div id="expenseList"></div></div>
+</section>
+
+<section id="akunPage" class="page">
+<div class="card"><h2>⚙️ Pengaturan</h2><label>Nama toko</label><input id="storeNameInput" maxlength="60" placeholder="Kasir Warung"><button class="primary full admin-only" onclick="saveStoreName()">Simpan Nama Toko</button><button class="secondary full" onclick="logout()">Keluar</button></div>
+<div class="card admin-only"><h3>Data</h3><p class="muted">Ekspor barang dan transaksi sebagai file JSON untuk cadangan.</p><button class="secondary full" onclick="exportData()">Unduh Cadangan Data</button><label>Impor cadangan JSON</label><input type="file" id="importFile" accept=".json,application/json"><button class="secondary full" onclick="importData()">Pulihkan Cadangan</button></div>
+</section>
+</main>
+<nav class="nav">
+<button class="active" data-page="homePage" onclick="go('homePage')">🏠<br>Beranda</button>
+<button data-page="kasirPage" onclick="go('kasirPage')">🛒<br>Kasir</button>
+<button class="admin-only" data-page="produkPage" onclick="go('produkPage')">📦<br>Barang</button>
+<button data-page="laporanPage" onclick="go('laporanPage')">📊<br>Laporan</button>
+<button data-page="akunPage" onclick="go('akunPage')">⚙️<br>Akun</button>
+</nav>
+</section>
+</div>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const money=n=>"Rp"+Number(n||0).toLocaleString("id-ID");
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
+const load=(key,fallback)=>{try{const v=localStorage.getItem(key);return v===null?fallback:JSON.parse(v)}catch(e){return fallback}};
+function save(key,value){localStorage.setItem(key,JSON.stringify(value))}
+let products=load("kw_products",[]),transactions=load("kw_transactions",[]),expenses=load("kw_expenses",[]),cart=[],currentRole="",editingId=null,photoData="";
+
+function login(){
+ const u=$("loginUser").value.trim(),p=$("loginPass").value,r=$("loginRole").value;
+ if((r==="admin"&&u==="admin"&&p==="1234")||(r==="kasir"&&u==="kasir"&&p==="1234")){
+  currentRole=r;$("loginScreen").classList.add("hidden");$("appScreen").classList.remove("hidden");
+  $("welcome").textContent="Masuk sebagai "+(r==="admin"?"Admin":"Kasir");
+  document.querySelectorAll(".admin-only").forEach(el=>el.classList.toggle("hidden",r!=="admin"));
+  $("storeTitle").textContent=localStorage.getItem("kw_store_name")||"Kasir Warung";$("storeNameInput").value=$("storeTitle").textContent;
+  go("homePage");refreshAll();
+ }else alert("Username, password, atau peran tidak sesuai.");
+}
+function logout(){if(!confirm("Keluar dari akun?"))return;currentRole="";cart=[];$("appScreen").classList.add("hidden");$("loginScreen").classList.remove("hidden");$("loginPass").value=""}
+function go(id){document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===id));document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.page===id));if(id==="kasirPage"){renderSaleProducts();renderCart()}if(id==="produkPage")renderProducts();if(id==="laporanPage"){renderReports();renderExpenses()}window.scrollTo({top:0,behavior:"smooth"})}
+
+function openProductForm(id=null){
+ if(currentRole!=="admin")return alert("Hanya admin yang dapat mengelola barang.");
+ editingId=id;photoData="";$("productForm").reset();$("pMin").value=5;$("photoPreview").classList.add("hidden");$("photoPreview").src="";
+ $("productFormTitle").textContent=id?"Edit Barang":"Tambah Barang";
+ if(id!==null){const p=products.find(x=>x.id===id);if(!p)return;$("pName").value=p.name;$("pCode").value=p.code;$("pCategory").value=p.category;$("pUnit").value=p.unit;$("pCost").value=p.cost;$("pPrice").value=p.price;$("pStock").value=p.stock;$("pMin").value=p.minStock;photoData=p.photo||"";if(photoData){$("photoPreview").src=photoData;$("photoPreview").classList.remove("hidden")}}
+ $("productFormCard").classList.remove("hidden");$("productFormCard").scrollIntoView({behavior:"smooth",block:"start"})
+}
+function closeProductForm(){$("productFormCard").classList.add("hidden");$("productForm").reset();editingId=null;photoData=""}
+$("pPhoto").addEventListener("change",async function(){const file=this.files&&this.files[0];if(!file)return;if(!file.type.startsWith("image/")){alert("Pilih file gambar.");this.value="";return}try{photoData=await resizeImage(file);$("photoPreview").src=photoData;$("photoPreview").classList.remove("hidden")}catch(e){alert("Foto tidak dapat diproses.")}});
+function resizeImage(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=reject;reader.onload=()=>{const img=new Image();img.onerror=reject;img.onload=()=>{const max=650,scale=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);c.getContext("2d").drawImage(img,0,0,c.width,c.height);resolve(c.toDataURL("image/jpeg",.68))};img.src=reader.result};reader.readAsDataURL(file)})}
+$("productForm").addEventListener("submit",e=>{
+ e.preventDefault();if(currentRole!=="admin")return alert("Akses admin diperlukan.");
+ const name=$("pName").value.trim(),code=$("pCode").value.trim(),category=$("pCategory").value,cost=Number($("pCost").value),price=Number($("pPrice").value),stock=Number($("pStock").value),minStock=Number($("pMin").value);
+ if(!name||!code||!category)return alert("Lengkapi nama, kode, dan kategori.");
+ if([cost,price,stock,minStock].some(n=>!Number.isFinite(n)||n<0))return alert("Harga dan stok harus angka nol atau lebih.");
+ if(products.some(p=>p.code.toLowerCase()===code.toLowerCase()&&p.id!==editingId))return alert("Kode barang sudah digunakan.");
+ const p={id:editingId??Date.now(),name,code,category,unit:$("pUnit").value,cost,price,stock,minStock,photo:photoData||(editingId?products.find(x=>x.id===editingId)?.photo:"")||""};
+ const old=products;products=editingId===null?[...products,p]:products.map(x=>x.id===editingId?p:x);
+ try{save("kw_products",products)}catch(err){products=old;return alert("Penyimpanan penuh. Coba foto lebih kecil atau hapus data lama.")}
+ closeProductForm();refreshAll();alert(editingId===null?"Barang berhasil ditambahkan.":"Barang berhasil diperbarui.")
+});
+function renderProducts(){const q=($("productSearch").value||"").trim().toLowerCase(),list=products.filter(p=>(p.name+" "+p.code).toLowerCase().includes(q));
+ $("productList").innerHTML=list.length?list.map(p=>`<div class="product">${p.photo?`<img class="thumb" src="${p.photo}" alt="">`:`<div class="thumb" style="display:grid;place-items:center;font-size:27px">📦</div>`}<div class="product-info"><b>${esc(p.name)}</b><small>${esc(p.code)} · ${esc(p.category)}</small><small>${money(p.price)} / ${esc(p.unit)} · Stok ${p.stock}</small><small>Modal ${money(p.cost)}${p.stock<=p.minStock?" · ⚠️ Stok menipis":""}</small><div class="actions"><button class="primary" onclick="openProductForm(${p.id})">Edit</button><button class="danger" onclick="deleteProduct(${p.id})">Hapus</button></div></div></div>`).join(""):'<div class="empty">Belum ada barang. Tekan Tambah Barang untuk memulai.</div>'}
+function deleteProduct(id){if(currentRole!=="admin")return alert("Akses admin diperlukan.");const p=products.find(x=>x.id===id);if(!p||!confirm(`Hapus barang "${p.name}"?`))return;const old=products;products=products.filter(x=>x.id!==id);try{save("kw_products",products)}catch(e){products=old;return alert("Gagal menyimpan perubahan.")}cart=cart.filter(x=>x.id!==id);refreshAll()}
+function renderSaleProducts(){const q=($("saleSearch").value||"").toLowerCase(),list=products.filter(p=>(p.name+" "+p.code).toLowerCase().includes(q));
+ $("saleProducts").innerHTML=list.length?list.map(p=>`<div class="product">${p.photo?`<img class="thumb" src="${p.photo}" alt="">`:`<div class="thumb" style="display:grid;place-items:center;font-size:27px">📦</div>`}<div class="product-info"><b>${esc(p.name)}</b><small>${money(p.price)} / ${esc(p.unit)}</small><small>Stok tersedia: ${p.stock}</small><button class="primary" style="margin-top:8px;padding:9px 12px" ${p.stock<=0?"disabled":""} onclick="addToCart(${p.id})">＋ Tambah</button></div></div>`).join(""):'<div class="empty">Barang belum tersedia. Admin perlu menambahkan barang.</div>'}
+function addToCart(id){const p=products.find(x=>x.id===id);if(!p)return;const item=cart.find(x=>x.id===id);if((item?.qty||0)>=p.stock)return alert("Jumlah melebihi stok.");if(item)item.qty++;else cart.push({id,qty:1});renderCart()}
+function cartSum(){return cart.reduce((sum,x)=>{const p=products.find(y=>y.id===x.id);return sum+(p?p.price*x.qty:0)},0)}
+function renderCart(){$("cartList").innerHTML=cart.length?cart.map(x=>{const p=products.find(y=>y.id===x.id);if(!p)return "";return `<div class="itemline"><div style="flex:1"><b>${esc(p.name)}</b><div class="muted">${money(p.price)} × ${x.qty}</div></div><div class="actions"><button class="secondary" onclick="changeQty(${x.id},-1)">−</button><button class="secondary" onclick="changeQty(${x.id},1)">＋</button><button class="danger" onclick="removeCart(${x.id})">×</button></div></div>`}).join(""):'<div class="empty">Belum ada barang di keranjang.</div>';$("cartTotal").textContent=money(cartSum());updateChange()}
+function changeQty(id,delta){const x=cart.find(y=>y.id===id),p=products.find(y=>y.id===id);if(!x||!p)return;const next=x.qty+delta;if(next<=0)cart=cart.filter(y=>y.id!==id);else if(next>p.stock)return alert("Jumlah melebihi stok.");else x.qty=next;renderCart()}
+function removeCart(id){cart=cart.filter(x=>x.id!==id);renderCart()}
+function clearCart(){if(!cart.length)return;if(confirm("Kosongkan keranjang?")){cart=[];$("paidAmount").value="";renderCart()}}
+function updateChange(){const total=cartSum(),paid=Number($("paidAmount").value||0);$("changeAmount").textContent=money(Math.max(0,paid-total))}
+function checkout(){
+ if(!cart.length)return alert("Keranjang masih kosong.");
+ const total=cartSum(),paid=Number($("paidAmount").value||0),method=$("paymentMethod").value;
+ if(method==="Tunai"&&paid<total)return alert("Uang dibayar belum mencukupi total belanja.");
+ for(const x of cart){const p=products.find(y=>y.id===x.id);if(!p||p.stock<x.qty)return alert("Stok barang tidak mencukupi.")}
+ const items=cart.map(x=>{const p=products.find(y=>y.id===x.id);return{id:p.id,name:p.name,code:p.code,qty:x.qty,price:p.price,cost:p.cost,subtotal:p.price*x.qty,profit:(p.price-p.cost)*x.qty}});
+ const transaction={id:Date.now(),date:new Date().toISOString(),items,total,paid:method==="Tunai"?paid:total,change:method==="Tunai"?paid-total:0,method,profit:items.reduce((s,x)=>s+x.profit,0)};
+ const before=products.map(p=>({...p}));for(const x of cart)products.find(p=>p.id===x.id).stock-=x.qty;
+ transactions.unshift(transaction);
+ try{save("kw_products",products);save("kw_transactions",transactions)}catch(e){products=before;transactions.shift();try{save("kw_products",products);save("kw_transactions",transactions)}catch(_){}return alert("Gagal menyimpan transaksi. Penyimpanan mungkin penuh.")}
+ cart=[];$("paidAmount").value="";refreshAll();alert("Transaksi berhasil!\nTotal: "+money(total)+"\nMetode: "+method+"\nKembalian: "+money(transaction.change));go("kasirPage")
+}
+function renderReports(){const sales=transactions.reduce((s,t)=>s+Number(t.total||0),0),profit=transactions.reduce((s,t)=>s+Number(t.profit||0),0);$("reportSales").textContent=money(sales);$("reportProfit").textContent=money(profit);
+ $("transactionList").innerHTML=transactions.length?transactions.map(t=>`<div class="card"><b>Transaksi #${t.id}</b><p class="muted">${new Date(t.date).toLocaleString("id-ID")}</p>${(t.items||[]).map(i=>`<div class="muted">${esc(i.name)} × ${i.qty} = ${money(i.subtotal)}</div>`).join("")}<div class="itemline"><span>Metode pembayaran</span><b>${esc(t.method||"Tunai")}</b></div><div class="itemline"><b>Total</b><strong class="total">${money(t.total)}</strong></div><div class="muted">Perkiraan laba kotor: ${money(t.profit||0)}</div></div>`).join(""):'<div class="empty">Belum ada transaksi.</div>'}
+function addExpense(){if(currentRole!=="admin")return alert("Hanya admin yang dapat mencatat pengeluaran.");const name=$("expenseName").value.trim(),amount=Number($("expenseAmount").value);if(!name||!Number.isFinite(amount)||amount<=0)return alert("Masukkan keterangan dan jumlah pengeluaran yang benar.");const e={id:Date.now(),name,amount,date:new Date().toISOString()};expenses.unshift(e);try{save("kw_expenses",expenses)}catch(err){expenses.shift();return alert("Gagal menyimpan pengeluaran.")}$("expenseName").value="";$("expenseAmount").value="";renderExpenses();alert("Pengeluaran berhasil dicatat.")}
+function renderExpenses(){$("expenseList").innerHTML=expenses.length?expenses.map(e=>`<div class="itemline"><div style="flex:1"><b>${esc(e.name)}</b><div class="muted">${new Date(e.date).toLocaleString("id-ID")}</div></div><div><b>${money(e.amount)}</b><button class="danger" onclick="deleteExpense(${e.id})">Hapus</button></div></div>`).join(""):'<div class="empty">Belum ada pengeluaran.</div>'}
+function deleteExpense(id){if(currentRole!=="admin")return alert("Akses admin diperlukan.");const e=expenses.find(x=>x.id===id);if(!e||!confirm("Hapus catatan pengeluaran ini?"))return;const old=expenses;expenses=expenses.filter(x=>x.id!==id);try{save("kw_expenses",expenses)}catch(err){expenses=old;return alert("Gagal menghapus pengeluaran.")}renderExpenses()}
+function saveStoreName(){if(currentRole!=="admin")return alert("Hanya admin yang dapat mengubah nama toko.");const name=$("storeNameInput").value.trim();if(!name)return alert("Nama toko tidak boleh kosong.");try{localStorage.setItem("kw_store_name",name)}catch(e){return alert("Gagal menyimpan nama toko.")}$("storeTitle").textContent=name;alert("Nama toko berhasil disimpan.")}
+function exportData(){if(currentRole!=="admin")return alert("Akses admin diperlukan.");const data={products,transactions,expenses,storeName:localStorage.getItem("kw_store_name")||"Kasir Warung",exportedAt:new Date().toISOString()};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="cadangan-kasir-warung.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function importData(){if(currentRole!=="admin")return alert("Akses admin diperlukan.");const file=$("importFile").files[0];if(!file)return alert("Pilih file JSON terlebih dahulu.");const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);if(!Array.isArray(d.products)||!Array.isArray(d.transactions)||!Array.isArray(d.expenses))return alert("Format file tidak valid.");if(!confirm("Pulihkan cadangan? Data saat ini akan diganti."))return;const old={products,transactions,expenses,name:localStorage.getItem("kw_store_name")};products=d.products;transactions=d.transactions;expenses=d.expenses;try{save("kw_products",products);save("kw_transactions",transactions);save("kw_expenses",expenses);if(d.storeName)localStorage.setItem("kw_store_name",d.storeName)}catch(err){products=old.products;transactions=old.transactions;expenses=old.expenses;save("kw_products",products);save("kw_transactions",transactions);save("kw_expenses",expenses);if(old.name)localStorage.setItem("kw_store_name",old.name);else localStorage.removeItem("kw_store_name");return alert("Gagal memulihkan data.")}refreshAll();$("storeTitle").textContent=localStorage.getItem("kw_store_name")||"Kasir Warung";$("storeNameInput").value=$("storeTitle").textContent;alert("Data berhasil dipulihkan.")}catch(e){alert("File JSON tidak valid atau rusak.")}};reader.readAsText(file)}
+function refreshDashboard(){const list=transactions.filter(t=>new Date(t.date).toISOString().slice(0,10)===today());$("statSales").textContent=money(list.reduce((s,t)=>s+Number(t.total||0),0));$("statTransactions").textContent=list.length;$("statProducts").textContent=products.length;$("statLow").textContent=products.filter(p=>Number(p.stock)<=Number(p.minStock)).length}
+function refreshAll(){refreshDashboard();renderProducts();renderSaleProducts();renderCart();renderReports();renderExpenses()}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+</script>
+</body>
+</html>
